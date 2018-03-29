@@ -10,7 +10,7 @@ server <- function(input, output, session){
   #summary data for race  
   summarydata <- reactive({
     my.data %>% filter(race == input$racecomp) %>%
-      filter(gender != "OTHER") %>% na.omit()
+      filter(gender != "OTHER")
   })
   
   #plot summary plot, age?
@@ -53,6 +53,31 @@ server <- function(input, output, session){
   )
   
   
+  # top ethnicities facet FOR EACH RACE
+  selrace.data <- reactive({
+    summarydata() %>% 
+      group_by(ethnicity) %>%
+      tally() %>%
+      arrange(. , desc(n)) -> ethnicity.count
+    
+    top_n(ethnicity.count, 5, n) -> topethnicities
+    #join only top 5 ethnicities
+    inner_join(summarydata(), topethnicities, by = "ethnicity")
+  })
+  
+  #plot top ethnicities age distribution
+  output$ethnicities_raceplot <- renderPlot({
+    selrace.data() %>%
+    ggplot(aes(x = age)) +
+      facet_grid(~ethnicity,
+                 scales = "free_y",
+                 labeller = as_labeller(name_adjust)) +
+      theme_classic() +
+      xlab("Age") +
+      ylab("Count") +
+      geom_histogram(bins = 20)
+      #ggtitle(paste0("Age Distribution of DNAsimple Donor Ethnicities for ", input$racecomp))
+  })
   
   
   #
@@ -225,7 +250,35 @@ server <- function(input, output, session){
   output$mult_maleusers <- renderInfoBox(
     infoBox("Male Users", multmaleusertally(), icon = icon("male"))
   )
-  #
+  
+  # check box select condition from group
+  #reactive for condition names
+  conditionnames <- reactive({
+    unique(datasetsel()$name)
+  })
+  
+  #display checkboxes for selected group
+  observeEvent(datasetsel(), {
+    updateCheckboxGroupInput(session, 
+                        "groupedcondcheckbox",
+                        choices = conditionnames(),
+                        selected = conditionnames()[1])
+  })
+  
+  #reactive for selection of variables for plot
+  groupedselectedcond <- reactive({
+    datasetsel() %>%
+      filter(name == input$groupedcondcheckbox)
+  })
+  
+  #plot for only selected conditions
+  output$groupedselectedconditionplot <- renderPlot(
+    groupedselectedcond() %>%
+      ggplot(aes(x = diagnosed_by_physician)) +
+      geom_bar(stat = "count")
+  )
+    
+
   #
   ##################################################################
   # Tab4 - United States Plot Tab

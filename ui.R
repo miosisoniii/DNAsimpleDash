@@ -34,6 +34,10 @@ ui <- dashboardPage(
                                 selected = "ASIAN")),
                 box(title = "Summary", status = "primary", solidHeader = T,
                     plotOutput("summaryplot"))
+              ),
+              fluidRow(
+                box(title = "User Ethnicities", status = "success", solidHeader = T,
+                    plotOutput("ethnicities_raceplot"))
               )
       ),
       tabItem(tabName = "singlecond",
@@ -89,8 +93,18 @@ ui <- dashboardPage(
                               choices = c("Cancer", "Psychological Disorders", "GI Disorders"),
                               selected = 'Cancer')
                 ),
-                box(title = "Multiple Condition Breakdown", status = "primary", solidHeader = T,
-                    plotOutput("groupbreakdown"))
+                box(title = "Multiple Condition Breakdown", status = "success", solidHeader = F,
+                    plotOutput("groupbreakdown")
+                )
+              ),
+              fluidRow(
+                box(title = "Select Conditions to Explore", status = "success", solidHeader = T,
+                    checkboxGroupInput(inputId = "groupedcondcheckbox",
+                                       label = "Select Condition",
+                                       choices = "")
+                ),
+                box(title = "Selected Condition(s)", status = "success", solidHeader = F,
+                    plotOutput("groupedselectedconditionplot"))
               )
       ),
       tabItem(tabName = "usmap",
