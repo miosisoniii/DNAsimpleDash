@@ -1,0 +1,138 @@
+
+#read_csv("~/shiny/DNAsimpleShiny/shinydata.csv") -> my.data
+source("functions.R")
+
+ui <- dashboardPage(
+  dashboardHeader(title = "DNAsimple Dashboard",
+                  titleWidth = 250),
+  dashboardSidebar(
+    sidebarMenu(
+      menuItem("Database Summary", tabName = "summary", icon = icon("female")),
+      menuItem("Explore Conditions", tabName = "conditions", icon = icon("th"),
+               menuSubItem("Single Condition", tabName = "singlecond", icon = icon("medkit")),
+               menuSubItem("Grouped Conditions", tabName = "multcond", icon = icon("sitemap")
+               )
+      ),
+      menuItem("Map Conditions", tabName = "usmap", icon = icon("location-arrow")),
+      menuItem("Statistical Analysis", tabName = "stats", icon = icon("connectdevelop")
+      )
+    )
+  ),
+  dashboardBody(
+    tabItems(
+      tabItem(tabName = "summary",
+              fluidRow(
+                valueBoxOutput("totalusers"),
+                infoBoxOutput("maleusers"),
+                infoBoxOutput("femaleusers")
+              ),
+              fluidRow(
+                box(title = "Select Race", status = "primary", solidHeader = T,
+                    selectInput(inputId = 'racecomp',
+                                label = 'Select:',
+                                choices = unique(my.data$race),
+                                selected = "ASIAN")),
+                box(title = "Summary", status = "primary", solidHeader = T,
+                    plotOutput("summaryplot"))
+              )
+      ),
+      tabItem(tabName = "singlecond",
+              fluidRow(
+                valueBoxOutput("singlecondtotal"),
+                infoBoxOutput("singlecondmale"),
+                infoBoxOutput("singlecondfemale")
+              ),
+              fluidRow(
+                box(
+                  selectInput(inputId = 'sel_singlecond',
+                              label = 'Select Condition',
+                              choices = unique(my.data$name),
+                              selected = "Diabetes (Type II)")),
+                box(title = "Single Condition", status = "primary", solidHeader = T,
+                    plotOutput("plot1")
+                )
+              ),
+              fluidRow(
+                box(title = "Single Condition Plot2",
+                    plotOutput("diagnosed.phys")),
+                box(title = "Single Condition Plot3",
+                    plotOutput("diagnosed.phys.count"))
+              ),
+              fluidRow(
+                box(title = "Another plot testing", width = NULL,
+                    plotOutput("diagnosed.test.ethnicity"))
+              ),
+              fluidRow(
+                box(title = "Single Condition Plot4"),
+                box(title = "Single Condition Plot5")
+              )
+      ),
+      tabItem(tabName = "multcond",
+              fluidRow(
+                valueBoxOutput("mult_totalusers"),
+                infoBoxOutput("mult_maleusers"),
+                infoBoxOutput("mult_femaleusers")
+              ),
+              fluidRow(
+                box(
+                  selectInput(inputId = 'sel_multcond',
+                              label = 'Explore groups of conditions:',
+                              #call for switch() function switches these to datasets
+                              choices = c("Cancer", "Psychological Disorders", "GI Disorders"),
+                              selected = 'psych.test')
+                ),
+                box(title = "Multiple Condition Breakdown", status = "primary", solidHeader = T,
+                    plotOutput("groupbreakdown"))
+              )
+      ),
+      tabItem(tabName = "usmap",
+              fluidRow(
+                box(title = "Condition Select", status = "primary", solidHeader = T,
+                    selectInput(inputId = 'sel_uscond',
+                                label = 'Select Condition',
+                                choices = unique(my.data$name),
+                                selected = "Diabetes (Type I)")),
+                valueBoxOutput("usmap_total")
+              ),
+              fluidRow(
+                infoBoxOutput("usmap_hascond"),
+                infoBoxOutput("usmap_nocond")
+                ),
+              
+              fluidRow(
+                box(title = "United States Condition Prevalence", 
+                    status = "primary", solidHeader = T, width = NULL,
+                    plotOutput("maptotal"))
+                ),
+              fluidRow(
+                box(title = "US Condition Ratio?", status = "warning", width = NULL,
+                    plotOutput("mapratio")
+                    )
+              )
+      ),
+      
+      tabItem(tabName = "stats",
+              fluidRow(
+                box(
+                  selectInput(inputId = 'stat_singlecond',
+                              label = 'Select Condition',
+                              choices = unique(my.data$name),
+                              selected = "Diabetes (Type II)")),
+                infoBoxOutput("CMHtestdisplay")
+              ),
+              fluidRow(
+                box(title = "Select Statistical Test", status = "warning", solidHeader = TRUE)
+              ),
+              fluidRow(
+                box(title = "Condition Matrix", width =  9,
+                    verbatimTextOutput("CMHtestformat"))
+              ),
+              fluidRow(
+                box(title = "Cochran-Mantel-Haenszel Test\nfor Repeated Tests of Independence", width = 8,
+                    verbatimTextOutput("CMHtestoutput")
+                )
+              )
+      )
+    )
+  )
+)
