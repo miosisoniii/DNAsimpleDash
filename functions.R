@@ -4,7 +4,7 @@ library(tidyverse)
 library(lazyeval)
 library(DT)
 library(vcd)
-
+library(xtable)
 #this script will be called as a source from the server.r 
 
 #open .csv file

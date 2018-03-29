@@ -354,7 +354,7 @@ server <- function(input, output, session){
     )
   )
   
-  
+  library(googleVis)
   ###show subset as reactive to coerce into correct table format -> display flat table
   CMHtest.table <- reactive({
     my.data %>%
@@ -369,9 +369,11 @@ server <- function(input, output, session){
       tally() -> CMHdata.table
     
     CMHdata.table$race[CMHdata.table$race == "MIDDLE\nEASTERN"] <- "MIDDLE.E"
-    flatTable <- xtabs(n ~ gender + diagnosed_by_physician + race, data = CMHdata.table)
-    #display flattened table
-    ftable(flatTable)
+    
+    Table <- xtabs(n ~ gender + diagnosed_by_physician + race, data = CMHdata.table)
+    ftable(Table)
+    
+
   })
 
   #print CMHtest
@@ -400,39 +402,15 @@ server <- function(input, output, session){
     
   })
   
-  # #save this
-  # CMHtest.output <- reactive({
-  #   my.data %>%
-  #     mutate(has_condition =
-  #              if_else(name == input$stat_singlecond,
-  #                      "TRUE", "FALSE")) %>%
-  #     distinct(user_id, .keep_all = TRUE) %>%
-  #     filter(gender != "OTHER") %>%
-  #     #Select which variable to stratify here
-  #     group_by(race, gender, diagnosed_by_physician,
-  #              takes_medication,
-  #              has_condition) %>%
-  #     tally() -> singlecondCMH
-  #   
-  #   #remove space!
-  #   singlecondCMH$race[singlecondCMH$race == "MIDDLE\nEASTERN"] <- "MIDDLE.E"
-  #   
-  #   #Select which variable to stratify here
-  #   xtabCMH.table <- xtabs(n ~ gender + #can use gender here too!
-  #                            diagnosed_by_physician + #select other variables here
-  #                            race, data = singlecondCMH)
-  #   mantelhaen.test(xtabCMH.table)
-  #   
-  # })
-  # 
-  #print to normal output not table
-  output$CMHtestoutput <- renderPrint({
-    print(CMHtest.output())
-  })
-
   #print output to datatable
   output$CMHtestformat <- renderPrint({
     print(CMHtest.table())
+  })
+
+
+  #print CMH test
+  output$CMHtestoutput <- renderPrint({
+    print(CMHtest.output())
   })
 }
 
