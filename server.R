@@ -108,7 +108,7 @@ server <- function(input, output, session){
   # Single Cond Plots
   # diagnosed by physician across race, fill
   output$diagnosed.phys <- renderPlot({
-    my.data %>% filter(name == input$sel_singlecond) %>%
+    singlecond.data() %>%
       ggplot(aes(x = race, fill = diagnosed_by_physician)) +
       ggtitle("Diagnosed by Physician") +
       xlab("Race") +
@@ -118,7 +118,7 @@ server <- function(input, output, session){
   
   # diagnosed by physician counts across gender, count
   output$diagnosed.phys.count <- renderPlot({
-    my.data %>% filter(name == input$sel_singlecond) %>%
+    singlecond.data() %>%
       ggplot(aes(x = diagnosed_by_physician)) +
       ggtitle("Diagnosed by Physician") +
       xlab("Race") +
@@ -138,6 +138,34 @@ server <- function(input, output, session){
       geom_bar(position = "dodge")
   })
   
+  # takes_medication counts across gender, fill/percentage
+  output$singlecond.takesmed <- renderPlot({
+    my.data %>% filter(name == input$sel_singlecond) %>%
+      ggplot(aes(x = race, fill = takes_medication)) +
+      ggtitle("Takes Medication") +
+      xlab("Race") +
+      ylab("Users") +
+      geom_bar(position = "fill")
+  })
+  
+  # condition runs in family, across race
+  output$singlecond.runsfamily <- renderPlot({
+    my.data %>% filter(name == input$stat_singlecond) %>%
+      ggplot(aes(x = race, fill = runs_in_family)) +
+      ggtitle("Condition Runs in Family") +
+      xlab("Race") +
+      ylab("Users") +
+      geom_bar(position = "fill")
+  })
+  # condition is self afflicted, across gender?
+  output$singlecond.selfafflicted <- renderPlot({
+    singlecond.data() %>%
+      ggplot(aes(x = gender, fill = is_self_afflicted)) +
+      ggtitle("Users Self Afflicted") +
+      xlab("Gender") +
+      ylab("Users") +
+      geom_bar(position = "fill")
+  })
   
   ##################################################################
   # Tab3 - Grouped Conditions Tab
@@ -198,37 +226,6 @@ server <- function(input, output, session){
     infoBox("Male Users", multmaleusertally(), icon = icon("male"))
   )
   #
-  ##################################################################
-  # Assorted Plots (for single/grouped conditions)
-  ##################################################################
-  
-  #third plot, takes_medication
-  output$plot3 <- renderPlot({
-    my.data %>% filter(name == input$condition) %>%
-      ggplot(aes(x = race, fill = takes_medication)) +
-      ggtitle("Takes Medication") +
-      xlab("Race") +
-      ylab("Users") +
-      geom_bar(position = "fill")
-  })
-  #fourth plot, runs_in_family
-  output$plot4 <- renderPlot({
-    my.data %>% filter(name == input$condition) %>%
-      ggplot(aes(x = race, fill = runs_in_family)) +
-      ggtitle("Condition Runs in Family") +
-      xlab("Race") +
-      ylab("Users") +
-      geom_bar(position = "fill")
-  })
-  #fifth plot, is_self_afflicted
-  output$plot5 <- renderPlot({
-    my.data %>% filter(name == input$condition) %>%
-      ggplot(aes(x = race, fill = is_self_afflicted)) +
-      ggtitle("Users Self Afflicted") +
-      xlab("Race") +
-      ylab("Users") +
-      geom_bar(position = "fill")
-  })
   #
   ##################################################################
   # Tab4 - United States Plot Tab
@@ -354,7 +351,7 @@ server <- function(input, output, session){
     )
   )
   
-  library(googleVis)
+
   ###show subset as reactive to coerce into correct table format -> display flat table
   CMHtest.table <- reactive({
     my.data %>%
@@ -366,14 +363,7 @@ server <- function(input, output, session){
       group_by(gender, race, diagnosed_by_physician,
                takes_medication,
                has_condition) %>%
-      tally() -> CMHdata.table
-    
-    CMHdata.table$race[CMHdata.table$race == "MIDDLE\nEASTERN"] <- "MIDDLE.E"
-    
-    Table <- xtabs(n ~ gender + diagnosed_by_physician + race, data = CMHdata.table)
-    ftable(Table)
-    
-
+      tally()
   })
 
   #print CMHtest
@@ -404,7 +394,10 @@ server <- function(input, output, session){
   
   #print output to datatable
   output$CMHtestformat <- renderPrint({
-    print(CMHtest.table())
+    CMHtest.table() -> CMHdata.table
+    CMHdata.table$race[CMHdata.table$race == "MIDDLE\nEASTERN"] <- "MIDDLE.E"
+    Table <- xtabs(n ~ gender + diagnosed_by_physician + race, data = CMHdata.table)
+    ftable(Table)
   })
 
 

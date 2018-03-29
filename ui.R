@@ -63,8 +63,16 @@ ui <- dashboardPage(
                     plotOutput("diagnosed.test.ethnicity"))
               ),
               fluidRow(
-                box(title = "Single Condition Plot4"),
-                box(title = "Single Condition Plot5")
+                box(title = "Single Condition Plot4",
+                    plotOutput("singlecond.takesmed")
+                    ),
+                box(title = "Single Condition Plot5",
+                    plotOutput("singlecond.runsfamily")
+                    )
+              ),
+              fluidRow(
+                box(title = "Single Condition: Self Afflicted",
+                    plotOutput("singlecond.selfafflicted"))
               )
       ),
       tabItem(tabName = "multcond",
@@ -74,12 +82,12 @@ ui <- dashboardPage(
                 infoBoxOutput("mult_femaleusers")
               ),
               fluidRow(
-                box(
-                  selectInput(inputId = 'sel_multcond',
+                box(title = "Grouped Conditions", status = "success", solidHeader = T,
+                  radioButtons(inputId = 'sel_multcond',
                               label = 'Explore groups of conditions:',
                               #call for switch() function switches these to datasets
                               choices = c("Cancer", "Psychological Disorders", "GI Disorders"),
-                              selected = 'psych.test')
+                              selected = 'Cancer')
                 ),
                 box(title = "Multiple Condition Breakdown", status = "primary", solidHeader = T,
                     plotOutput("groupbreakdown"))
@@ -104,10 +112,8 @@ ui <- dashboardPage(
                     status = "primary", solidHeader = T, width = NULL,
                     plotOutput("maptotal"))
                 ),
-              fluidRow(
-                box(title = "US Condition Ratio?", status = "warning", width = NULL,
-                    plotOutput("mapratio")
-                    )
+              box(title = "US Condition Ratio?", status = "warning", width = NULL,
+                  plotOutput("mapratio")
               )
       ),
       
