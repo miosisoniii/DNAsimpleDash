@@ -64,7 +64,7 @@ ui <- dashboardPage(
                 )
               ),
               fluidRow(
-                box(title = "Single Condition Plot2",
+                box(title = "Single Condition Plot2", width = 4,
                     plotOutput("diagnosed.phys")
                     ),
                 box(title = "Single Condition Plot3", width = 2,
