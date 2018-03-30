@@ -5,6 +5,7 @@ library(lazyeval)
 library(DT)
 library(vcd)
 library(xtable)
+library(plotly)
 #this script will be called as a source from the server.r 
 
 #open .csv file

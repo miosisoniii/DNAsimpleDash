@@ -18,6 +18,28 @@ server <- function(input, output, session){
     summarydata() %>% ggplot(aes(x = gender, y = age)) +
       geom_boxplot()
   })
+
+  #filter for all data
+  piedata <- reactive({
+    my.data %>%
+      distinct(user_id, .keep_all = TRUE) %>%
+      group_by(race) %>%
+      tally() %>%
+      na.omit()
+  })
+  #render plotly pie chart
+  output$piechart <- renderPlotly(
+    plot_ly(data = piedata(), 
+            labels = ~race, 
+            values = ~n, 
+            type = 'pie',
+            textposition = 'outside',
+            textinfo = 'label+percent') %>%
+      layout(
+             xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+             yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
+  )
+
   
   #total user tally for race
   totalusertally <- reactive({
@@ -77,6 +99,14 @@ server <- function(input, output, session){
       ylab("Count") +
       geom_histogram(bins = 20)
       #ggtitle(paste0("Age Distribution of DNAsimple Donor Ethnicities for ", input$racecomp))
+  })
+  
+  #plot totals for each race
+  output$totalethnicitycounts <- renderPlot({
+    selrace.data() %>%
+      ggplot(aes(x = ethnicity)) +
+      scale_x_discrete(labels = name_adjust) +
+      geom_bar(stat = "count")
   })
   
   
@@ -223,7 +253,7 @@ server <- function(input, output, session){
   
   #grouped total database valuebox
   output$mult_totalusers <- renderValueBox(
-    valueBox("Total Users", multtotalusertally(), icon = icon("users"))
+    valueBox("Total Users", multtotalusertally(), color = "green", icon = icon("users"))
   )
   
   #grouped female users tally
@@ -236,7 +266,7 @@ server <- function(input, output, session){
   
   #grouped female infobox
   output$mult_femaleusers <- renderValueBox(
-    infoBox("Female Users", multfemaleusertally(), icon = icon("female"))
+    infoBox("Female Users", multfemaleusertally(), color = "green", icon = icon("female"))
   )
   
   #grouped male user tally
@@ -248,7 +278,7 @@ server <- function(input, output, session){
   })
   #grouped male infobox
   output$mult_maleusers <- renderInfoBox(
-    infoBox("Male Users", multmaleusertally(), icon = icon("male"))
+    infoBox("Male Users", multmaleusertally(), color = "green", icon = icon("male"))
   )
   
   # check box select condition from group

@@ -27,17 +27,24 @@ ui <- dashboardPage(
                 infoBoxOutput("femaleusers")
               ),
               fluidRow(
-                box(title = "Select Race", status = "primary", solidHeader = T,
-                    selectInput(inputId = 'racecomp',
-                                label = 'Select:',
-                                choices = unique(my.data$race),
-                                selected = "ASIAN")),
+                box(title = "User Composition", status = "primary", solidHeader = T,
+                    plotlyOutput("piechart")
+                    ),
                 box(title = "Summary", status = "primary", solidHeader = T,
-                    plotOutput("summaryplot"))
+                    plotOutput("summaryplot"),
+                    selectInput(inputId = 'racecomp',
+                                label = 'Select race:',
+                                choices = unique(my.data$race),
+                                selected = "ASIAN")
+                )
               ),
               fluidRow(
                 box(title = "User Ethnicities", status = "success", solidHeader = T,
-                    plotOutput("ethnicities_raceplot"))
+                    plotOutput("ethnicities_raceplot")
+                    ),
+                box(title = "User Ethnicity Totals", color = "green", solidHeader = T,
+                    plotOutput("totalethnicitycounts")
+                    )
               )
       ),
       tabItem(tabName = "singlecond",
