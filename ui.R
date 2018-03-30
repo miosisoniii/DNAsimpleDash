@@ -64,26 +64,27 @@ ui <- dashboardPage(
                 )
               ),
               fluidRow(
-                box(title = "Single Condition Plot2",
-                    plotOutput("diagnosed.phys")),
-                box(title = "Single Condition Plot3",
-                    plotOutput("diagnosed.phys.count"))
+                box(title = "Single Condition Plot2", width = 4,
+                    plotOutput("diagnosed.phys")
+                    ),
+                box(title = "Single Condition Plot3", width = 2,
+                    plotOutput("diagnosed.phys.count")
+                    ),
+                box(title = "Single Condition Plot4", width = 3,
+                    plotOutput("singlecond.takesmed")
+                    ),
+                box(title = "Single Condition Plot5", width = 3,
+                    plotOutput("singlecond.runsfamily")
+                )
               ),
               fluidRow(
                 box(title = "Another plot testing", width = NULL,
                     plotOutput("diagnosed.test.ethnicity"))
               ),
               fluidRow(
-                box(title = "Single Condition Plot4",
-                    plotOutput("singlecond.takesmed")
-                    ),
-                box(title = "Single Condition Plot5",
-                    plotOutput("singlecond.runsfamily")
-                    )
-              ),
-              fluidRow(
                 box(title = "Single Condition: Self Afflicted",
-                    plotOutput("singlecond.selfafflicted"))
+                    plotOutput("singlecond.selfafflicted")
+                    )
               )
       ),
       tabItem(tabName = "multcond",
