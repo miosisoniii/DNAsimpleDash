@@ -446,7 +446,7 @@ server <- function(input, output, session){
       group_by(gender, race, diagnosed_by_physician,
                takes_medication,
                has_condition) %>%
-      tally()
+      tally() %>% mutate(n = ceiling(n/10)) ######## SJS
   })
 
   #print CMHtest
@@ -462,8 +462,9 @@ server <- function(input, output, session){
       group_by(race, gender, diagnosed_by_physician,
                takes_medication,
                has_condition) %>%
-      tally() -> singlecondCMH
-    
+      tally() %>%
+      mutate(n = ceiling(n/10)) -> singlecondCMH ######### SJS
+        
     #remove space!
     singlecondCMH$race[singlecondCMH$race == "MIDDLE\nEASTERN"] <- "MIDDLE.E"
     
