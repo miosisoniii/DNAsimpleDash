@@ -40,9 +40,7 @@ my.data %>%
            name == "Autism" |
            #personality disorders
            name == "Bipolar disorder" |
-           name == "Schizoaffective disorder" |
            name == "Dissociative Identity Disorder (or Multiple Personality Disorder)" |
-           name == "Lewy body dementia" |
            name == "Dementia" |
            #Eating Disorders
            name == "Binge Eating Disorder (BED)" |
@@ -71,7 +69,7 @@ my.data %>%
            name == "Irritable Bowel Syndrome (IBS)" |
            name == "Diverticulitis" |
            name == "Diverticulosis" |
-           name == "Ischemic colitis") -> digest.data
+           name == "Celiac disease") -> digest.data
 
 #filter diabetes?
 
