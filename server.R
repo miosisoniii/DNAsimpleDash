@@ -44,12 +44,14 @@ server <- function(input, output, session){
   #total user tally for race
   totalusertally <- reactive({
     my.data %>% filter(race == input$racecomp) %>%
-      filter(gender != "OTHER") %>% na.omit() %>%
+      filter(gender != "OTHER") %>%
       distinct(user_id) %>% tally()
   })
   
   output$totalusers <- renderValueBox(
-    valueBox("Total Users", totalusertally(), icon = icon("users"))
+    valueBox(totalusertally(), 
+             paste0("Total Users, Race: ", input$racecomp), 
+             icon = icon("users"))
   )
   
   #female users tally
@@ -57,7 +59,7 @@ server <- function(input, output, session){
     my.data %>% filter(race == input$racecomp) %>%
       filter(gender != "OTHER") %>% 
       filter(gender == "FEMALE") %>%
-      distinct(user_id) %>% na.omit() %>% tally()
+      distinct(user_id) %>% tally()
   })
   output$femaleusers <- renderValueBox(
     infoBox("Female Users", femaleusertally(), icon = icon("female"))
@@ -68,7 +70,7 @@ server <- function(input, output, session){
     my.data %>% filter(race == input$racecomp) %>%
       filter(gender != "OTHER") %>% 
       filter(gender == "MALE") %>% 
-      distinct(user_id) %>% na.omit() %>% tally()
+      distinct(user_id) %>% tally()
   })
   output$maleusers <- renderInfoBox(
     infoBox("Male Users", maleusertally(), icon = icon("male"))
@@ -221,6 +223,53 @@ server <- function(input, output, session){
       ylab("Users") +
       geom_bar(position = "fill")
   })
+  ##################################################################
+  # Tab2 - Single Condition Tab, Select Variable
+  ##################################################################
+  
+  selectvariable <- reactive({
+    switch(input$sel_var,
+           "Diagnosed by Physician" =  "diagnosed_by_physician",
+           "Takes Medication" = "takes_medication",
+           "Is Self Afflicted" = "is_self_afflicted")
+  })
+  
+  selectdemo <- reactive({
+    switch(input$sel_demographic.test,
+           "Gender" =  "gender",
+           "Race" = "race",
+           "Ethnicity" = "ethnicity",
+           "Age Group" = "age.group")
+  })
+  
+  output$selectvariableplot <- renderPlot({
+    if(input$checkbox.white != TRUE) {
+      singlecond.data() %>%
+        filter(ethnicity != "WHITE_EUROPEAN") %>%
+        ggplot(aes_string(x = selectdemo(),
+                          fill = selectvariable()), na.rm = TRUE) +
+        geom_bar(stat = "count") +
+        scale_x_discrete(labels = name_adjust) +
+        ggtitle(paste0(input$sel_var, 
+                       " for ", 
+                       input$sel_singlecond, 
+                       ", by ", 
+                       input$sel_demographic.test))
+    }
+    else{
+      singlecond.data() %>%
+        ggplot(aes_string(x = selectdemo(),
+                          fill = selectvariable()), na.rm = TRUE) +
+        ggtitle(paste0(input$sel_var, 
+                       " for ",
+                       input$sel_singlecond, 
+                       ", by ", 
+                       input$sel_demographic.test)) +
+        scale_x_discrete(labels = name_adjust) +
+        geom_bar(stat = "count")
+    }
+  })
+  
   
   ##################################################################
   # Tab3 - Grouped Conditions Tab
@@ -446,49 +495,105 @@ server <- function(input, output, session){
       group_by(gender, race, diagnosed_by_physician,
                takes_medication,
                has_condition) %>%
-      tally() %>% mutate(n = ceiling(n/10)) ######## SJS
-  })
-
-  #print CMHtest
-  #bind original data to filtered data from selected condition in first reactive?
-  CMHtest.output <- reactive({
-    my.data %>%
-      mutate(has_condition =
-               if_else(name == input$stat_singlecond,
-                       "TRUE", "FALSE")) %>%
-      distinct(user_id, .keep_all = TRUE) %>%
-      filter(gender != "OTHER") %>%
-      #Select which variable to stratify here
-      group_by(race, gender, diagnosed_by_physician,
-               takes_medication,
-               has_condition) %>%
-      tally() %>%
-      mutate(n = ceiling(n/10)) -> singlecondCMH ######### SJS
-        
-    #remove space!
-    singlecondCMH$race[singlecondCMH$race == "MIDDLE\nEASTERN"] <- "MIDDLE.E"
-    
-    #Select which variable to stratify here
-    xtabCMH.table <- xtabs(n ~ gender + #can use gender here too!
-                             diagnosed_by_physician + #select other variables here
-                             race, data = singlecondCMH)
-    mantelhaen.test(xtabCMH.table)
-    
+      tally() %>% 
+      mutate(n = ceiling(n/2)) ######## SJS
   })
   
-  #print output to datatable
+  #print cross-tabulated data
   output$CMHtestformat <- renderPrint({
     CMHtest.table() -> CMHdata.table
     CMHdata.table$race[CMHdata.table$race == "MIDDLE\nEASTERN"] <- "MIDDLE.E"
-    Table <- xtabs(n ~ gender + diagnosed_by_physician + race, data = CMHdata.table)
+    Table <- xtabs(n ~ gender + has_condition + race, data = CMHdata.table)
     ftable(Table)
   })
-
-
-  #print CMH test
+  
+  
+  #print CMH test output
   output$CMHtestoutput <- renderPrint({
-    print(CMHtest.output())
+    CMHtest <- xtabs(n ~ gender + has_condition + race, data = CMHtest.table())
+    mantelhaen.test(CMHtest)
+    # IF Woolf Test is SIGNIFICANT, then CMH test is not needed.
+    #woolf_test(CMHtest)
   })
+
+  
+  
+  #create format for error bars
+  CMHplot.data <- reactive({
+    #to be used if able to get proportion
+    
+    # fun.low = function(x){
+    #   binom.test(x["Count"], x["Total"],
+    #              0.5)$conf.int[1]
+    # }
+    # fun.up = function(x){
+    #   binom.test(x["COUNT"], x["Total"],
+    #              0.5)$conf.int[2]
+    # }
+    # 
+    # 
+    # Data = mutate(CMHtest.table(),
+    #               low.ci = apply(CMHtest.table()[c("Count", "Total")], 1, fun.low),
+    #               upper.ci = apply(CMHtest.table()[c("Count", "Total")], 1, fun.up))
+    # Data
+    
+    #to be used if unable to get proportion?
+    # CMHtest.table() -> CMHdata.table
+    # CMHdata.table$race[CMHdata.table$race == "MIDDLE\nEASTERN"] <- "MIDDLE.E"
+    # Table <- xtabs(n ~ gender + race, data = CMHdata.table)
+    # as.data.frame(Table) -> df
+    # df %>% 
+    #   rename(n = Freq) %>%
+    # mutate(percent = n/sum(n),
+    #          error = sqrt((percent * (1-percent))/n))
+    library(data.table)
+    CMHtest.table() -> CMHdata.table
+    CMHdata.table$race[CMHdata.table$race == "MIDDLE\nEASTERN"] <- "MIDDLE.E"
+    Table <- xtabs(n ~ gender + has_condition + race, data = CMHdata.table)
+    as.data.frame(Table) -> df
+    setDT(df)[,prop:=Freq/sum(Freq),by=race] -> df2
+    
+    df2 %>% mutate(Total = Freq/prop)
+    
+    # fun.low = function(x){
+    #   binom.test(x["Freq"], x["Total"],
+    #              0.5)$conf.int[1]
+    # }
+    # fun.up = function(x){
+    #   binom.test(x["COUNT"], x["Total"],
+    #              0.5)$conf.int[2]
+    # }
+    # 
+    # 
+    # Data = mutate(CMHtest.table(),
+    #               low.ci = apply(CMHtest.table()[c("Count", "Total")], 1, fun.low),
+    #               upper.ci = apply(CMHtest.table()[c("Count", "Total")], 1, fun.up))
+    #extract Confidence interval from CMH test
+    # CMHtest <- xtabs(n ~ gender + has_condition + race, data = CMHtest.table())
+    # mantelhaen.test(CMHtest) -> ct
+    # #str(ct)
+    # 
+    # ct$conf.int[1:2] -> ct1
+    # ct1
+    
+  })
+  
+  
+  #print CMH CMHdata table
+  output$CMHplot.table <- renderPrint({
+    CMHplot.data()
+  })
+  
+  
+  #print CMH test plot
+  output$CMHplot <- renderPlot({
+    ggplot(CMHplot.data(), aes(race, percent, fill = gender)) +
+      geom_col(position = "dodge") +
+      geom_errorbar(aes(ymin = percent - error,
+                        ymax = percent + error),
+                    position = position_dodge(0.9), width = 0.2)
+  })
+  
 }
 
 

@@ -22,7 +22,7 @@ ui <- dashboardPage(
     tabItems(
       tabItem(tabName = "summary",
               fluidRow(
-                valueBoxOutput("totalusers"),
+                valueBoxOutput("totalusers", width = 4),
                 infoBoxOutput("maleusers"),
                 infoBoxOutput("femaleusers")
               ),
@@ -58,24 +58,46 @@ ui <- dashboardPage(
                   selectInput(inputId = 'sel_singlecond',
                               label = 'Select Condition',
                               choices = unique(my.data$name),
-                              selected = "Diabetes (Type II)")),
+                              selected = "Diabetes (Type II)"),
+                  
+                  selectInput(inputId = 'sel_var',
+                              label = 'Select Variable to View',
+                              choices = c("Diagnosed by Physician",
+                                          "Takes Medication",
+                                          "Is Self Afflicted"),
+                              selected = "Diagnosed by Physician"),
+                  
+                  selectInput(inputId = 'sel_demographic.test',
+                              label = 'Select Demographic to View',
+                              choices = c("Gender", 
+                                          "Race", 
+                                          "Ethnicity", 
+                                          "Age Group"),
+                              selected = "Gender"),
+                  
+                  checkboxInput(inputId = "checkbox.white",
+                                label = "Include White_European?",
+                                value = FALSE)
+                  ),
                 box(title = "Single Condition", status = "primary", solidHeader = T,
                     plotOutput("plot1")
                 )
               ),
               fluidRow(
+                box(title = "Select Variable Plot", width = 6,
+                    plotOutput("selectvariableplot")
+                    ),
                 box(title = "Single Condition Plot2", width = 4,
                     plotOutput("diagnosed.phys")
                     ),
                 box(title = "Single Condition Plot3", width = 2,
                     plotOutput("diagnosed.phys.count")
-                    ),
-                box(title = "Single Condition Plot4", width = 3,
-                    plotOutput("singlecond.takesmed")
-                    ),
-                box(title = "Single Condition Plot5", width = 3,
-                    plotOutput("singlecond.runsfamily")
-                )
+                    )
+                # box(title = "Single Condition Plot4", width = 3,
+                #     plotOutput("singlecond.takesmed")
+                #     ),
+                # box(title = "Single Condition Plot5", width = 3,
+                #     plotOutput("singlecond.runsfamily"))
               ),
               fluidRow(
                 box(title = "Another plot testing", width = NULL,
@@ -158,6 +180,12 @@ ui <- dashboardPage(
               fluidRow(
                 box(title = "Cochran-Mantel-Haenszel Test\nfor Repeated Tests of Independence", width = 8,
                     verbatimTextOutput("CMHtestoutput")
+                )
+              ),
+              fluidRow(
+                box(title = "Data", width = NULL,
+                    verbatimTextOutput("CMHplot.table"),
+                    plotOutput("CMHplot")
                 )
               )
       )
