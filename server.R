@@ -9,14 +9,18 @@ server <- function(input, output, session){
   #Total Database - reactive, render*
   #summary data for race  
   summarydata <- reactive({
-    my.data %>% filter(race == input$racecomp) %>%
-      filter(gender != "OTHER")
+    my.data %>% 
+      filter(race == input$racecomp) %>%
+      filter(gender != "OTHER") %>%
+      distinct(user_id, .keep_all = TRUE)
   })
   
   #plot summary plot, age?
   output$summaryplot <- renderPlot({
     summarydata() %>% ggplot(aes(x = gender, y = age)) +
-      geom_boxplot()
+      geom_boxplot() +
+      xlab("Age") +
+      ylab("Gender")
   })
 
   #filter for all data
@@ -41,6 +45,7 @@ server <- function(input, output, session){
   )
 
   
+
   #total user tally for race
   totalusertally <- reactive({
     my.data %>% filter(race == input$racecomp) %>%
@@ -56,8 +61,7 @@ server <- function(input, output, session){
   
   #female users tally
   femaleusertally <- reactive({
-    my.data %>% filter(race == input$racecomp) %>%
-      filter(gender != "OTHER") %>% 
+    summarydata() %>%
       filter(gender == "FEMALE") %>%
       distinct(user_id) %>% tally()
   })
@@ -67,8 +71,7 @@ server <- function(input, output, session){
   
   #male user tally
   maleusertally <- reactive({
-    my.data %>% filter(race == input$racecomp) %>%
-      filter(gender != "OTHER") %>% 
+    summarydata() %>% 
       filter(gender == "MALE") %>% 
       distinct(user_id) %>% tally()
   })
@@ -91,9 +94,9 @@ server <- function(input, output, session){
   
   #plot top ethnicities age distribution
   output$ethnicities_raceplot <- renderPlot({
-    selrace.data() %>%
+    summarydata() %>%
     ggplot(aes(x = age)) +
-      facet_grid(~ethnicity,
+      facet_grid(gender~ethnicity,
                  scales = "free_y",
                  labeller = as_labeller(name_adjust)) +
       theme_classic() +
@@ -105,10 +108,13 @@ server <- function(input, output, session){
   
   #plot totals for each race
   output$totalethnicitycounts <- renderPlot({
-    selrace.data() %>%
+    summarydata() %>%
       ggplot(aes(x = ethnicity)) +
       scale_x_discrete(labels = name_adjust) +
-      geom_bar(stat = "count")
+      geom_bar(stat = "count") +
+      geom_text(stat ='count', aes(label=..count..), vjust= -0.5) +
+      ylab("Users") +
+      xlab("Ethnicity")
   })
   
   
@@ -129,7 +135,8 @@ server <- function(input, output, session){
       ggtitle("Age/Gender Breakdown") +
       xlab("Gender") +
       ylab("Age") +
-      geom_boxplot()
+      geom_boxplot() +
+      labs(fill = "Race")
   })
   
   
@@ -163,66 +170,62 @@ server <- function(input, output, session){
   )
   
   # Single Cond Plots
-  # diagnosed by physician across race, fill
-  output$diagnosed.phys <- renderPlot({
-    singlecond.data() %>%
-      ggplot(aes(x = race, fill = diagnosed_by_physician)) +
-      ggtitle("Diagnosed by Physician") +
-      xlab("Race") +
+  # is self afflicted, count
+  output$self_afflicted.count <- renderPlot({
+    singlecond.data() %>% 
+      filter(!is.na(is_self_afflicted)) %>%
+      ggplot(aes(x = is_self_afflicted)) +
+      xlab("Self Afflicted") +
       ylab("Users") +
-      geom_bar(position = "fill")
+      geom_bar(stat = "count") +
+      geom_text(stat='count', aes(label=..count..), vjust = -0.5,
+                position = position_dodge(0.9), size=3.5)
   })
   
-  # diagnosed by physician counts across gender, count
-  output$diagnosed.phys.count <- renderPlot({
+  #takes medication, count
+  output$takes_med.count <- renderPlot({
+    singlecond.data() %>%
+      ggplot(aes(x = takes_medication)) +
+      xlab("Takes Medication") +
+      ylab("Users") +
+      geom_bar(stat = "count") +
+      geom_text(stat='count', aes(label=..count..), vjust = -0.5,
+                position = position_dodge(0.9), size=3.5)
+      
+  })
+  
+  # diagnosed by physician, count
+  output$diagnosed_phys.count <- renderPlot({
     singlecond.data() %>%
       ggplot(aes(x = diagnosed_by_physician)) +
-      ggtitle("Diagnosed by Physician") +
-      xlab("Race") +
+      xlab("Diagnosed") +
       ylab("Users") +
-      geom_bar(stat = "count")
+      geom_bar(stat = "count") +
+      geom_text(stat='count', aes(label=..count..), vjust = -0.5,
+                position = position_dodge(0.9), size=3.5)
   })
+  ###################################################
+  #REORDER CHECKBOX!
   
   # diagnosed by physician counts across gender, count
   output$diagnosed.test.ethnicity <- renderPlot({
     my.data %>% filter(name == input$sel_singlecond) %>%
       filter(ethnicity != "WHITE_EUROPEAN") %>%
-      ggplot(aes(x = ethnicity, fill = diagnosed_by_physician)) +
-      ggtitle("Diagnosed by Physician") +
+      ggplot(aes(x = reorder(ethnicity, -table(ethnicity)[ethnicity]), 
+                 fill = diagnosed_by_physician)) +
+      ggtitle("Users Diagnosed by Physician") +
       xlab("Race") +
       ylab("Users") +
       scale_x_discrete(labels = name_adjust) +
-      geom_bar(position = "dodge")
+      geom_bar(position = "dodge") +
+      theme(legend.position = c(0.8, 0.8)) +
+      labs(fill = "Diagnosed by Physician") +
+      geom_text(stat='count', aes(label=..count..), vjust = -0.5,
+                position = position_dodge(0.9), size=3.5) +
+      scale_fill_brewer(palette="Paired")
   })
   
-  # takes_medication counts across gender, fill/percentage
-  output$singlecond.takesmed <- renderPlot({
-    my.data %>% filter(name == input$sel_singlecond) %>%
-      ggplot(aes(x = race, fill = takes_medication)) +
-      ggtitle("Takes Medication") +
-      xlab("Race") +
-      ylab("Users") +
-      geom_bar(position = "fill")
-  })
-  
-  # condition runs in family, across race
-  output$singlecond.runsfamily <- renderPlot({
-    my.data %>% filter(name == input$stat_singlecond) %>%
-      ggplot(aes(x = race, fill = runs_in_family)) +
-      ggtitle("Condition Runs in Family") +
-      xlab("Race") +
-      ylab("Users") +
-      geom_bar(position = "fill")
-  })
-  # condition is self afflicted, across gender?
-  output$singlecond.selfafflicted <- renderPlot({
-    singlecond.data() %>%
-      ggplot(aes(x = gender, fill = is_self_afflicted)) +
-      ggtitle("Users Self Afflicted") +
-      xlab("Gender") +
-      ylab("Users") +
-      geom_bar(position = "fill")
-  })
+
   ##################################################################
   # Tab2 - Single Condition Tab, Select Variable
   ##################################################################
@@ -243,20 +246,7 @@ server <- function(input, output, session){
   })
   
   output$selectvariableplot <- renderPlot({
-    if(input$checkbox.white != TRUE) {
-      singlecond.data() %>%
-        filter(ethnicity != "WHITE_EUROPEAN") %>%
-        ggplot(aes_string(x = selectdemo(),
-                          fill = selectvariable()), na.rm = TRUE) +
-        geom_bar(stat = "count") +
-        scale_x_discrete(labels = name_adjust) +
-        ggtitle(paste0(input$sel_var, 
-                       " for ", 
-                       input$sel_singlecond, 
-                       ", by ", 
-                       input$sel_demographic.test))
-    }
-    else{
+    if(input$checkbox.white != FALSE) {
       singlecond.data() %>%
         ggplot(aes_string(x = selectdemo(),
                           fill = selectvariable()), na.rm = TRUE) +
@@ -266,7 +256,36 @@ server <- function(input, output, session){
                        ", by ", 
                        input$sel_demographic.test)) +
         scale_x_discrete(labels = name_adjust) +
-        geom_bar(stat = "count")
+        geom_bar(stat = "count", position = "dodge") +
+        theme(legend.position = c(0.8, 0.8)) +
+        labs(fill = input$sel_var) +
+        ylab("Users") +
+        xlab(input$sel_demographic.test) +
+        geom_text(stat='count', aes(label=..count..), vjust = -0.5,
+                  position = position_dodge(0.9), size=3.5) +
+        scale_fill_brewer(palette = "Paired")
+    }
+    else{
+      singlecond.data() %>%
+        filter(ethnicity != "WHITE_EUROPEAN") %>%
+        ggplot(aes_string(x = selectdemo(),
+                          fill = selectvariable()), na.rm = TRUE) +
+        geom_bar(stat = "count", position = "dodge") +
+        scale_x_discrete(labels = name_adjust) +
+        ggtitle(paste0(input$sel_var, 
+                       " for ", 
+                       input$sel_singlecond, 
+                       ", by ", 
+                       input$sel_demographic.test)) +
+        theme(legend.position = c(0.8, 0.8)) +
+        labs(fill = input$sel_var) +
+        ylab("Users") +
+        xlab(input$sel_demographic.test) +
+        geom_text(stat='count', aes(label=..count..), vjust= -0.5, 
+                  position = position_dodge(0.9), size=3.5) +
+        scale_fill_brewer(palette = "Paired")
+      
+      
     }
   })
   
@@ -277,11 +296,17 @@ server <- function(input, output, session){
   
   #for plotting grouping breakdown
   output$groupbreakdown <- renderPlot({
-    datasetsel() %>% ggplot(aes(x = name, fill = name)) +
+    datasetsel() %>% 
+      ggplot(aes(x = reorder(name, -table(name)[name]), 
+                 fill = reorder(name, -table(name)[name]))) +
       geom_bar(color = "black") +
       coord_flip() +
       theme(legend.position = "none") +
-      scale_x_discrete(labels = name_adjust)
+      scale_x_discrete(labels = name_adjust) +
+      geom_text(stat='count', aes(label=..count..), hjust= -0.2) +
+      ylab("Conditions") +
+      xlab("Users")
+    
   })
   
   
@@ -344,17 +369,20 @@ server <- function(input, output, session){
                         selected = conditionnames()[1])
   })
   
-  #reactive for selection of variables for plot
+  #choose by UPDATED checkbox input
   groupedselectedcond <- reactive({
-    datasetsel() %>%
-      filter(name == input$groupedcondcheckbox)
+    datasetsel() %>% filter(name %in% input$groupedcondcheckbox)
   })
   
   #plot for only selected conditions
   output$groupedselectedconditionplot <- renderPlot(
-    groupedselectedcond() %>%
-      ggplot(aes(x = diagnosed_by_physician)) +
-      geom_bar(stat = "count")
+      ggplot(data =  groupedselectedcond(),
+             aes(x = diagnosed_by_physician)) +
+        geom_bar(stat = "count") +
+        ylab("Users") +
+        xlab("Diagnosed by Physician") +
+        geom_text(stat='count', aes(label=..count..), vjust = -0.5,
+                  position = position_dodge(0.9), size=3.5)  
   )
     
 
@@ -429,8 +457,8 @@ server <- function(input, output, session){
       mutate(hascond.us = 
                if_else(name == input$sel_uscond,
                        "TRUE", "FALSE")) %>%
-      filter(gender != "OTHER") %>%
-      distinct(user_id, .keep_all = TRUE)
+      distinct(user_id, .keep_all = TRUE) %>%
+      filter(gender != "OTHER")
   })
   
   # USplot reactive for counting total users
@@ -479,7 +507,7 @@ server <- function(input, output, session){
   
   #output for infobox displaying reactive selected input for SINGLE condition
   output$CMHtestdisplay <- renderInfoBox(
-    infoBox("Condition: ", selectedsinglecond(), icon = icon("medkit")
+    infoBox("Condition: ", selectedsinglecond(), color = "yellow", icon = icon("medkit")
     )
   )
   
@@ -519,41 +547,41 @@ server <- function(input, output, session){
   
   
   #create format for error bars
-  CMHplot.data <- reactive({
-    #to be used if able to get proportion
-    
-    # fun.low = function(x){
-    #   binom.test(x["Count"], x["Total"],
-    #              0.5)$conf.int[1]
-    # }
-    # fun.up = function(x){
-    #   binom.test(x["COUNT"], x["Total"],
-    #              0.5)$conf.int[2]
-    # }
-    # 
-    # 
-    # Data = mutate(CMHtest.table(),
-    #               low.ci = apply(CMHtest.table()[c("Count", "Total")], 1, fun.low),
-    #               upper.ci = apply(CMHtest.table()[c("Count", "Total")], 1, fun.up))
-    # Data
-    
-    #to be used if unable to get proportion?
-    # CMHtest.table() -> CMHdata.table
-    # CMHdata.table$race[CMHdata.table$race == "MIDDLE\nEASTERN"] <- "MIDDLE.E"
-    # Table <- xtabs(n ~ gender + race, data = CMHdata.table)
-    # as.data.frame(Table) -> df
-    # df %>% 
-    #   rename(n = Freq) %>%
-    # mutate(percent = n/sum(n),
-    #          error = sqrt((percent * (1-percent))/n))
-    library(data.table)
-    CMHtest.table() -> CMHdata.table
-    CMHdata.table$race[CMHdata.table$race == "MIDDLE\nEASTERN"] <- "MIDDLE.E"
-    Table <- xtabs(n ~ gender + has_condition + race, data = CMHdata.table)
-    as.data.frame(Table) -> df
-    setDT(df)[,prop:=Freq/sum(Freq),by=race] -> df2
-    
-    df2 %>% mutate(Total = Freq/prop)
+  # CMHplot.data <- reactive({
+  #   #to be used if able to get proportion
+  #   
+  #   # fun.low = function(x){
+  #   #   binom.test(x["Count"], x["Total"],
+  #   #              0.5)$conf.int[1]
+  #   # }
+  #   # fun.up = function(x){
+  #   #   binom.test(x["COUNT"], x["Total"],
+  #   #              0.5)$conf.int[2]
+  #   # }
+  #   # 
+  #   # 
+  #   # Data = mutate(CMHtest.table(),
+  #   #               low.ci = apply(CMHtest.table()[c("Count", "Total")], 1, fun.low),
+  #   #               upper.ci = apply(CMHtest.table()[c("Count", "Total")], 1, fun.up))
+  #   # Data
+  #   
+  #   #to be used if unable to get proportion?
+  #   # CMHtest.table() -> CMHdata.table
+  #   # CMHdata.table$race[CMHdata.table$race == "MIDDLE\nEASTERN"] <- "MIDDLE.E"
+  #   # Table <- xtabs(n ~ gender + race, data = CMHdata.table)
+  #   # as.data.frame(Table) -> df
+  #   # df %>% 
+  #   #   rename(n = Freq) %>%
+  #   # mutate(percent = n/sum(n),
+  #   #          error = sqrt((percent * (1-percent))/n))
+  #   library(data.table)
+  #   CMHtest.table() -> CMHdata.table
+  #   CMHdata.table$race[CMHdata.table$race == "MIDDLE\nEASTERN"] <- "MIDDLE.E"
+  #   Table <- xtabs(n ~ gender + has_condition + race, data = CMHdata.table)
+  #   as.data.frame(Table) -> df
+  #   setDT(df)[,prop:=Freq/sum(Freq),by=race] -> df2
+  #   
+  #   df2 %>% mutate(Total = Freq/prop)
     
     # fun.low = function(x){
     #   binom.test(x["Freq"], x["Total"],
@@ -576,23 +604,23 @@ server <- function(input, output, session){
     # ct$conf.int[1:2] -> ct1
     # ct1
     
-  })
+  #})
   
   
-  #print CMH CMHdata table
-  output$CMHplot.table <- renderPrint({
-    CMHplot.data()
-  })
-  
-  
-  #print CMH test plot
-  output$CMHplot <- renderPlot({
-    ggplot(CMHplot.data(), aes(race, percent, fill = gender)) +
-      geom_col(position = "dodge") +
-      geom_errorbar(aes(ymin = percent - error,
-                        ymax = percent + error),
-                    position = position_dodge(0.9), width = 0.2)
-  })
+  # #print CMH CMHdata table
+  # output$CMHplot.table <- renderPrint({
+  #   CMHplot.data()
+  # })
+  # 
+  # 
+  # #print CMH test plot
+  # output$CMHplot <- renderPlot({
+  #   ggplot(CMHplot.data(), aes(race, percent, fill = gender)) +
+  #     geom_col(position = "dodge") +
+  #     geom_errorbar(aes(ymin = percent - error,
+  #                       ymax = percent + error),
+  #                   position = position_dodge(0.9), width = 0.2)
+  # })
   
 }
 

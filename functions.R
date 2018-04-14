@@ -6,6 +6,7 @@ library(DT)
 library(vcd)
 library(xtable)
 library(plotly)
+library(maps)
 #this script will be called as a source from the server.r 
 
 #open .csv file
@@ -261,7 +262,9 @@ name_adjust <- c('Throat cancer' = 'Throat',
                  'WHITE' = 'White',
                  'MIDDLE EASTERN' = 'Middle\nEastern',
                  'HISPANIC' = 'Hispanic',
-                 'OTHER' = 'Other')
+                 'OTHER' = 'Other',
+                 'MALE' = 'Male',
+                 'FEMALE' = 'Female')
 
 #USplot code
 

@@ -27,24 +27,24 @@ ui <- dashboardPage(
                 infoBoxOutput("femaleusers")
               ),
               fluidRow(
-                box(title = "User Composition", status = "primary", solidHeader = T,
+                box(title = "Database Composition", status = "primary", solidHeader = T,
                     plotlyOutput("piechart")
                     ),
-                box(title = "Summary", status = "primary", solidHeader = T,
-                    plotOutput("summaryplot"),
+                box(title = "Donor Race Composition", status = "primary", solidHeader = T,
                     selectInput(inputId = 'racecomp',
                                 label = 'Select race:',
                                 choices = unique(my.data$race),
-                                selected = "ASIAN")
+                                selected = "ASIAN"),
+                    plotOutput("totalethnicitycounts")
                 )
               ),
               fluidRow(
-                box(title = "User Ethnicities", status = "success", solidHeader = T,
+                box(title = "Ethnicity Age Distribution", status = "primary", solidHeader = T, width = 8,
                     plotOutput("ethnicities_raceplot")
-                    ),
-                box(title = "User Ethnicity Totals", color = "green", solidHeader = T,
-                    plotOutput("totalethnicitycounts")
-                    )
+                ),
+                box(title = "Gender Age Distribution", status = "primary", solidHeader = T, width = 4,
+                    plotOutput("summaryplot")
+                )
               )
       ),
       tabItem(tabName = "singlecond",
@@ -54,11 +54,13 @@ ui <- dashboardPage(
                 infoBoxOutput("singlecondfemale")
               ),
               fluidRow(
-                box(
-                  selectInput(inputId = 'sel_singlecond',
-                              label = 'Select Condition',
-                              choices = unique(my.data$name),
-                              selected = "Diabetes (Type II)"),
+                box(title = "Explore", background = "aqua", status = "info",
+                  selectizeInput(inputId = 'sel_singlecond',
+                                 label = 'Select Condition',
+                                 choices = unique(my.data$name),
+                                 selected = "Diabetes (Type II)",
+                                 options = list(maxOptions = 1300)
+                                 ),
                   
                   selectInput(inputId = 'sel_var',
                               label = 'Select Variable to View',
@@ -73,40 +75,35 @@ ui <- dashboardPage(
                                           "Race", 
                                           "Ethnicity", 
                                           "Age Group"),
-                              selected = "Gender"),
+                              selected = "Race"),
                   
                   checkboxInput(inputId = "checkbox.white",
                                 label = "Include White_European?",
                                 value = FALSE)
                   ),
-                box(title = "Single Condition", status = "primary", solidHeader = T,
+                box(title = "Single Condition", status = "info", solidHeader = T,
                     plotOutput("plot1")
                 )
               ),
               fluidRow(
-                box(title = "Select Variable Plot", width = 6,
+                box(title = "Explore Selected Condition", status = "info", solidHeader = T, width = NULL,
                     plotOutput("selectvariableplot")
-                    ),
-                box(title = "Single Condition Plot2", width = 4,
-                    plotOutput("diagnosed.phys")
-                    ),
-                box(title = "Single Condition Plot3", width = 2,
-                    plotOutput("diagnosed.phys.count")
                     )
-                # box(title = "Single Condition Plot4", width = 3,
-                #     plotOutput("singlecond.takesmed")
-                #     ),
-                # box(title = "Single Condition Plot5", width = 3,
-                #     plotOutput("singlecond.runsfamily"))
               ),
               fluidRow(
-                box(title = "Another plot testing", width = NULL,
+                box(title = "Is Self Afflicted", status = "info", width = 4,
+                    plotOutput("self_afflicted.count")
+                    ),
+                box(title = "Diagnosed by Physician", status = "info", width = 4,
+                    plotOutput("diagnosed_phys.count")
+                    ),
+                box(title = "Takes Medication", status = "info", width = 4,
+                    plotOutput("takes_med.count")
+                )
+              ),
+              fluidRow(
+                box(title = "Composition: Ethnicity", status = "info", width = NULL,
                     plotOutput("diagnosed.test.ethnicity"))
-              ),
-              fluidRow(
-                box(title = "Single Condition: Self Afflicted",
-                    plotOutput("singlecond.selfafflicted")
-                    )
               )
       ),
       tabItem(tabName = "multcond",
@@ -116,32 +113,32 @@ ui <- dashboardPage(
                 infoBoxOutput("mult_femaleusers")
               ),
               fluidRow(
-                box(title = "Grouped Conditions", status = "success", solidHeader = T,
+                box(title = "Explore Condition Groups", status = "success", solidHeader = T,
                   radioButtons(inputId = 'sel_multcond',
-                              label = 'Explore groups of conditions:',
+                              label = 'Select Grouped Conditions:',
                               #call for switch() function switches these to datasets
                               choices = c("Cancer", "Psychological Disorders", "GI Disorders"),
                               selected = 'Cancer')
                 ),
-                box(title = "Multiple Condition Breakdown", status = "success", solidHeader = F,
+                box(title = "Condition Breakdown", status = "success", solidHeader = F,
                     plotOutput("groupbreakdown")
                 )
               ),
               fluidRow(
                 box(title = "Select Conditions to Explore", status = "success", solidHeader = T,
                     checkboxGroupInput(inputId = "groupedcondcheckbox",
-                                       label = "Select Condition",
+                                       label = "Select Conditions (s):",
                                        choices = "")
                 ),
-                box(title = "Selected Condition(s)", status = "success", solidHeader = F,
+                box(title = "Diagnosed by Physician Counts", status = "success", solidHeader = F,
                     plotOutput("groupedselectedconditionplot"))
               )
       ),
       tabItem(tabName = "usmap",
               fluidRow(
-                box(title = "Condition Select", status = "primary", solidHeader = T,
+                box(title = "Map Conditions", status = "primary", solidHeader = T,
                     selectInput(inputId = 'sel_uscond',
-                                label = 'Select Condition',
+                                label = 'Select Condition:',
                                 choices = unique(my.data$name),
                                 selected = "Diabetes (Type I)")),
                 valueBoxOutput("usmap_total")
@@ -156,36 +153,30 @@ ui <- dashboardPage(
                     status = "primary", solidHeader = T, width = NULL,
                     plotOutput("maptotal"))
                 ),
-              box(title = "US Condition Ratio?", status = "warning", width = NULL,
+              box(title = "United States Condition Ratio", status = "warning", width = NULL,
                   plotOutput("mapratio")
               )
       ),
       
       tabItem(tabName = "stats",
               fluidRow(
-                box(
-                  selectInput(inputId = 'stat_singlecond',
-                              label = 'Select Condition',
-                              choices = unique(my.data$name),
-                              selected = "Diabetes (Type II)")),
+                box(title = "Condition Input", status = "warning", solidHeader = TRUE,
+                    selectizeInput(inputId = 'stat_singlecond',
+                                   label = 'Select Condition:',
+                                   choices = unique(my.data$name),
+                                   selected = "Diabetes (Type II)",
+                                   options = list(maxOptions = 1300)
+                    )
+                ),
                 infoBoxOutput("CMHtestdisplay")
               ),
               fluidRow(
-                box(title = "Select Statistical Test", status = "warning", solidHeader = TRUE)
-              ),
-              fluidRow(
-                box(title = "Condition Matrix", width =  9,
-                    verbatimTextOutput("CMHtestformat"))
-              ),
-              fluidRow(
-                box(title = "Cochran-Mantel-Haenszel Test\nfor Repeated Tests of Independence", width = 8,
+                box(title = "Condition Matrix", status = "warning", width = 6,
+                    verbatimTextOutput("CMHtestformat")
+                ),
+                box(title = "Cochran-Mantel-Haenszel Test\nfor Repeated Tests of Independence", 
+                    status = "warning", solidHeader = TRUE, width = 6,
                     verbatimTextOutput("CMHtestoutput")
-                )
-              ),
-              fluidRow(
-                box(title = "Data", width = NULL,
-                    verbatimTextOutput("CMHplot.table"),
-                    plotOutput("CMHplot")
                 )
               )
       )
