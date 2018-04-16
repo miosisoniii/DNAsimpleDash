@@ -103,7 +103,6 @@ server <- function(input, output, session){
       xlab("Age") +
       ylab("Count") +
       geom_histogram(bins = 20)
-      #ggtitle(paste0("Age Distribution of DNAsimple Donor Ethnicities for ", input$racecomp))
   })
   
   #plot totals for each race
@@ -204,7 +203,6 @@ server <- function(input, output, session){
       geom_text(stat='count', aes(label=..count..), vjust = -0.5,
                 position = position_dodge(0.9), size=3.5)
   })
-  ###################################################
   #REORDER CHECKBOX!
   
   # diagnosed by physician counts across gender, count
@@ -543,7 +541,6 @@ server <- function(input, output, session){
     # IF Woolf Test is SIGNIFICANT, then CMH test is not needed.
     #woolf_test(CMHtest)
   })
-
   
   
   #create format for error bars

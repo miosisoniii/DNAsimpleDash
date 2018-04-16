@@ -3,10 +3,10 @@
 source("functions.R")
 
 ui <- dashboardPage(
-  dashboardHeader(title = "DNAsimple Dashboard",
-                  titleWidth = 250),
+  dashboardHeader(title = "DNAsimpleDash"),
   dashboardSidebar(
     sidebarMenu(
+      menuItem("Welcome", tabName = "welcome", icon = icon("graduation-cap")),
       menuItem("Database Summary", tabName = "summary", icon = icon("female")),
       menuItem("Explore Conditions", tabName = "conditions", icon = icon("th"),
                menuSubItem("Single Condition", tabName = "singlecond", icon = icon("medkit")),
@@ -20,6 +20,27 @@ ui <- dashboardPage(
   ),
   dashboardBody(
     tabItems(
+      tabItem(tabName = "welcome",
+              fluidRow(
+                box(width = 6, title = "", status = "primary", solidHeader = T,
+                    column(12,
+                           h1("Welcome to DNAsimpleDash!"),
+                           p("With this app you can explore DNAsimple's patient database obtained on December 23rd, 2017.
+                    The company has gained significant popularity since its inception in 2016. With a rapidly growing donor database,
+                    a faster way to visualize their data was needed to streamline their client-facing activities."),
+                           h5("Data source: DNAsimple Inc.")
+                    )
+                ),
+                box(title = "Affiliations", width = 4,
+                    column(6,
+                           img(src = "tu_cst.png", style = "width:200%; max-width: 600px;")
+                    )
+                )
+              ),
+              fluidRow(
+                box(title = "DNAsimple Inc.", width = 12)
+              )
+      ),
       tabItem(tabName = "summary",
               fluidRow(
                 valueBoxOutput("totalusers", width = 4),
@@ -171,11 +192,11 @@ ui <- dashboardPage(
                 infoBoxOutput("CMHtestdisplay")
               ),
               fluidRow(
-                box(title = "Condition Matrix", status = "warning", width = 6,
+                box(title = "Condition Matrix", status = "warning", width = NULL,
                     verbatimTextOutput("CMHtestformat")
                 ),
                 box(title = "Cochran-Mantel-Haenszel Test\nfor Repeated Tests of Independence", 
-                    status = "warning", solidHeader = TRUE, width = 6,
+                    status = "warning", solidHeader = TRUE, width = NULL,
                     verbatimTextOutput("CMHtestoutput")
                 )
               )

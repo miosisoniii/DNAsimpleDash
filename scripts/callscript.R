@@ -1,7 +1,7 @@
 #this script will be called as a source from the server.r 
 
 #open .csv file
-my.data <- read_csv("~/shiny/DNAsimpleShiny/shinydata.csv")
+my.data <- read_csv("~/shinydata.csv")
 
 #filter for cancer
 my.data %>% filter(aact_name_2 == "Cancer") -> aact2cancer.filt
