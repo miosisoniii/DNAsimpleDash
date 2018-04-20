@@ -15,10 +15,7 @@ my.data <- read_csv("shinydata.csv")
 #filter for cancer
 my.data %>% filter(aact_name_2 == "Cancer") -> aact2cancer.filt
 aact2cancer.filt
-
 my.data %>% filter(aact_name_3 == "Advanced Cancer") -> aact3cancer.filt
-
-
 aact2cancer.filt[!rev(duplicated(rev(aact2cancer.filt$user_id))),] -> cancer.uniq
 
 my.data %>% filter(str_detect(name, 'cancer')) %>%
@@ -265,25 +262,3 @@ name_adjust <- c('Throat cancer' = 'Throat',
                  'OTHER' = 'Other',
                  'MALE' = 'Male',
                  'FEMALE' = 'Female')
-
-#USplot code
-
-#code for CMH test
-#get data in table format for CMH package
-# my.data %>%
-#   select(has_condition,
-#          gender, race, ethnicity, diagnosed_by_physician, takes_medication, is_genetic_testing, is_carrier) %>%
-#   group_by(has_condition, gender, race, ethnicity) %>%
-#   na.omit() %>% tally() -> CMH_df   #make sure to check if using na.omit AFTER creating the dataframe
-# CMH_df
-# 
-# 
-# #potential for selecting variables to test here!
-# #https://shiny.rstudio.com/reference/shiny/1.0.5/renderPrint.html
-# #create table for CMH test
-# Table = xtabs(n ~ gender + has_condition + race, data = CMH_df)
-# ftable(Table)
-# mantelhaen.test(Table)
-# 
-# 
-# #print output CMH test (table)!

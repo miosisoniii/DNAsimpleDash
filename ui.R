@@ -22,23 +22,54 @@ ui <- dashboardPage(
     tabItems(
       tabItem(tabName = "welcome",
               fluidRow(
-                box(width = 6, title = "", status = "primary", solidHeader = T,
-                    column(12,
+                box(width = 12, title = "", status = "primary",
+                    column(6,
                            h1("Welcome to DNAsimpleDash!"),
                            p("With this app you can explore DNAsimple's patient database obtained on December 23rd, 2017.
                     The company has gained significant popularity since its inception in 2016. With a rapidly growing donor database,
-                    a faster way to visualize their data was needed to streamline their client-facing activities."),
-                           h5("Data source: DNAsimple Inc.")
-                    )
-                ),
-                box(title = "Affiliations", width = 4,
+                    a faster way to visualize their data was needed to streamline client-facing activities.")
+                    ),
                     column(6,
-                           img(src = "tu_cst.png", style = "width:200%; max-width: 600px;")
+                           img(src = "dnasimple_logo.png", 
+                               style = "width:100%; max-width: 600px")
+                           )
+                )
+              ),
+              fluidRow(
+                box(title = "About DNAsimple", status = "primary", width = 12, solidHeader = T,
+                    column(6,
+                           img(src = "investigator_process.png", style = "width: 100%; max-width: 500px;")
+                    ),
+                    column(6,
+                           img(src = "sharktank.jpg", style = "width: 100%; max-width: 500px;"),
+                           p("CEO of DNAsimple, Olivier Noel PhD presents to SharkTank on CBS.\n
+                             Image source: allsharktankproducts.com")
                     )
                 )
               ),
               fluidRow(
-                box(title = "DNAsimple Inc.", width = 12)
+                box(title = "Donor Signup Process", status = "primary", width = 12, solidHeader = T,
+                    img(src = "donor_process.png", style = "width: 100%; max-width: 1000px;")
+                )
+              ),
+              fluidRow(
+                box(title = "About the Author", status = "danger", width = 8, solidHeader = T,
+                    column(8,
+                           h2("Artemio Sison III"),
+                           h3("Education"),
+                           p("BS Biotechnology, Endicott College '16"),
+                           p("PSM Bioinformatics, Temple University `18"),
+                           h3("Experience"),
+                           p("Manufacturing Asssociate I, WuXi Advanced Therapies")
+                    ),
+                    column(4,
+                           img(src = "brochurephoto_sison.JPG", 
+                               style = "width: 100%; max-width: 500px;")
+                    )
+                ),
+                box(title = "Affiliations", status = "danger", width = 4, solidHeader = T,
+                    img(src = "tu_cst.png", style = "width: 100%; max-width: 600px;")
+                )
               )
       ),
       tabItem(tabName = "summary",
@@ -63,7 +94,7 @@ ui <- dashboardPage(
                 box(title = "Ethnicity Age Distribution", status = "primary", solidHeader = T, width = 8,
                     plotOutput("ethnicities_raceplot")
                 ),
-                box(title = "Gender Age Distribution", status = "primary", solidHeader = T, width = 4,
+                box(title = "Age Distribution Across Gender", status = "primary", solidHeader = T, width = 4,
                     plotOutput("summaryplot")
                 )
               )
@@ -75,7 +106,7 @@ ui <- dashboardPage(
                 infoBoxOutput("singlecondfemale")
               ),
               fluidRow(
-                box(title = "Explore", background = "aqua", status = "info",
+                box(title = "Explore", status = "info",
                   selectizeInput(inputId = 'sel_singlecond',
                                  label = 'Select Condition',
                                  choices = unique(my.data$name),
@@ -97,12 +128,22 @@ ui <- dashboardPage(
                                           "Ethnicity", 
                                           "Age Group"),
                               selected = "Race"),
+                  sliderInput("singlecondslider", "Select age range:",
+                              min = 5, max = 100, step = 5,
+                              value = c(5, 100)),
+                  
+                  checkboxInput(inputId = "checkbox.recentdiagnosed",
+                                label = "Recently Diagnosed (Years with Condition <= 1)?",
+                                value = FALSE),
+                  # sliderInput("yearpresentslider", "Select number of years with condition:",
+                  #             min = 0, max = 50,
+                  #             value = c(0, 50)),
                   
                   checkboxInput(inputId = "checkbox.white",
                                 label = "Include White_European?",
                                 value = FALSE)
                   ),
-                box(title = "Single Condition", status = "info", solidHeader = T,
+                box(title = "Composition of Selected Condition", status = "info", solidHeader = T,
                     plotOutput("plot1")
                 )
               ),
@@ -139,16 +180,24 @@ ui <- dashboardPage(
                               label = 'Select Grouped Conditions:',
                               #call for switch() function switches these to datasets
                               choices = c("Cancer", "Psychological Disorders", "GI Disorders"),
-                              selected = 'Cancer')
+                              selected = 'Cancer'),
+                  sliderInput("ageslider", "Select age range:",
+                              min = 5, max = 100, step = 5,
+                              value = c(5, 100))
                 ),
                 box(title = "Condition Breakdown", status = "success", solidHeader = F,
                     plotOutput("groupbreakdown")
                 )
               ),
               fluidRow(
+                infoBoxOutput("grouped_topethnicity"),
+                infoBoxOutput("group_male.age"),
+                infoBoxOutput("group_female.age")
+              ),
+              fluidRow(
                 box(title = "Select Conditions to Explore", status = "success", solidHeader = T,
                     checkboxGroupInput(inputId = "groupedcondcheckbox",
-                                       label = "Select Conditions (s):",
+                                       label = "Select Condition(s):",
                                        choices = "")
                 ),
                 box(title = "Diagnosed by Physician Counts", status = "success", solidHeader = F,

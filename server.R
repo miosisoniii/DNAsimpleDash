@@ -17,10 +17,14 @@ server <- function(input, output, session){
   
   #plot summary plot, age?
   output$summaryplot <- renderPlot({
+    summarymed <- ddply(summarydata(), .(gender), summarise, med = median(age))
     summarydata() %>% ggplot(aes(x = gender, y = age)) +
       geom_boxplot() +
       xlab("Age") +
       ylab("Gender")
+    #add median text in boxplot here:
+      #geom_text(data = summarymed, aes(x = gender, y = age, label = summarymed),
+      #          size = 3, vjust = -1.5)
   })
 
   #filter for all data
@@ -123,7 +127,11 @@ server <- function(input, output, session){
   ##################################################################
   #for single condition plot
   singlecond.data <- reactive({
-    my.data %>% filter(name == input$sel_singlecond) %>%
+    my.data %>% 
+      filter(name == input$sel_singlecond) %>%
+      filter(age > input$singlecondslider[1], age < input$singlecondslider[2]) %>%
+      #filter(years_present > input$yearpresentslider[1], 
+      #       years_present < input$yearpresentslider[2] | is.na(years_present)) %>%
       filter(gender != "OTHER")
   })
   
@@ -244,7 +252,7 @@ server <- function(input, output, session){
   })
   
   output$selectvariableplot <- renderPlot({
-    if(input$checkbox.white != FALSE) {
+    if(input$checkbox.white == TRUE) {
       singlecond.data() %>%
         ggplot(aes_string(x = selectdemo(),
                           fill = selectvariable()), na.rm = TRUE) +
@@ -264,27 +272,69 @@ server <- function(input, output, session){
         scale_fill_brewer(palette = "Paired")
     }
     else{
-      singlecond.data() %>%
-        filter(ethnicity != "WHITE_EUROPEAN") %>%
-        ggplot(aes_string(x = selectdemo(),
-                          fill = selectvariable()), na.rm = TRUE) +
-        geom_bar(stat = "count", position = "dodge") +
-        scale_x_discrete(labels = name_adjust) +
-        ggtitle(paste0(input$sel_var, 
-                       " for ", 
-                       input$sel_singlecond, 
-                       ", by ", 
-                       input$sel_demographic.test)) +
-        theme(legend.position = c(0.8, 0.8)) +
-        labs(fill = input$sel_var) +
-        ylab("Users") +
-        xlab(input$sel_demographic.test) +
-        geom_text(stat='count', aes(label=..count..), vjust= -0.5, 
-                  position = position_dodge(0.9), size=3.5) +
-        scale_fill_brewer(palette = "Paired")
-      
-      
+      if(input$checkbox.white == TRUE && input$checkbox.recentdiagnosed == TRUE) {
+        singlecond.data() %>%
+          filter(years_present <= 1) %>%
+          ggplot(aes_string(x = selectdemo(),
+                            fill = selectvariable()), na.rm = TRUE) +
+          ggtitle(paste0(input$sel_var, 
+                         " for ",
+                         input$sel_singlecond, 
+                         ", by ", 
+                         input$sel_demographic.test)) +
+          scale_x_discrete(labels = name_adjust) +
+          geom_bar(stat = "count", position = "dodge") +
+          theme(legend.position = c(0.8, 0.8)) +
+          labs(fill = input$sel_var) +
+          ylab("Users") +
+          xlab(input$sel_demographic.test) +
+          geom_text(stat='count', aes(label=..count..), vjust = -0.5,
+                    position = position_dodge(0.9), size=3.5) +
+          scale_fill_brewer(palette = "Paired")
+      } 
+      else {
+        if(input$checkbox.white == FALSE && input$checkbox.recentdiagnosed == FALSE) {
+          singlecond.data() %>%
+            ggplot(aes_string(x = selectdemo(),
+                              fill = selectvariable()), na.rm = TRUE) +
+            ggtitle(paste0(input$sel_var, 
+                           " for ",
+                           input$sel_singlecond, 
+                           ", by ", 
+                           input$sel_demographic.test)) +
+            scale_x_discrete(labels = name_adjust) +
+            geom_bar(stat = "count", position = "dodge") +
+            theme(legend.position = c(0.8, 0.8)) +
+            labs(fill = input$sel_var) +
+            ylab("Users") +
+            xlab(input$sel_demographic.test) +
+            geom_text(stat='count', aes(label=..count..), vjust = -0.5,
+                      position = position_dodge(0.9), size=3.5) +
+            scale_fill_brewer(palette = "Paired")
+        }
+        else{
+          singlecond.data() %>%
+            filter(ethnicity != "WHITE_EUROPEAN") %>%
+            ggplot(aes_string(x = selectdemo(),
+                              fill = selectvariable()), na.rm = TRUE) +
+            geom_bar(stat = "count", position = "dodge") +
+            scale_x_discrete(labels = name_adjust) +
+            ggtitle(paste0(input$sel_var, 
+                           " for ", 
+                           input$sel_singlecond, 
+                           ", by ", 
+                           input$sel_demographic.test)) +
+            theme(legend.position = c(0.8, 0.8)) +
+            labs(fill = input$sel_var) +
+            ylab("Users") +
+            xlab(input$sel_demographic.test) +
+            geom_text(stat='count', aes(label=..count..), vjust= -0.5, 
+                      position = position_dodge(0.9), size=3.5) +
+            scale_fill_brewer(palette = "Paired")
+        }
+      }
     }
+    
   })
   
   
@@ -294,9 +344,12 @@ server <- function(input, output, session){
   
   #for plotting grouping breakdown
   output$groupbreakdown <- renderPlot({
-    datasetsel() %>% 
-      ggplot(aes(x = reorder(name, -table(name)[name]), 
-                 fill = reorder(name, -table(name)[name]))) +
+    datasetsel() %>%
+      filter(age > input$ageslider[1], age < input$ageslider[2]) %>%
+      # ggplot(aes(x = reorder(name, -table(name)[name]), 
+      #            fill = reorder(name, -table(name)[name]))) +
+      ggplot(aes(x = name, 
+                 fill = name)) +
       geom_bar(color = "black") +
       coord_flip() +
       theme(legend.position = "none") +
@@ -369,7 +422,9 @@ server <- function(input, output, session){
   
   #choose by UPDATED checkbox input
   groupedselectedcond <- reactive({
-    datasetsel() %>% filter(name %in% input$groupedcondcheckbox)
+    datasetsel() %>% 
+      filter(age > input$ageslider[1], age < input$ageslider[2]) %>%
+      filter(name %in% input$groupedcondcheckbox)
   })
   
   #plot for only selected conditions
@@ -384,7 +439,44 @@ server <- function(input, output, session){
   )
     
 
-  #
+  #top ethnicity "not white"
+  topethnicity <- reactive({
+    groupedselectedcond() %>%
+      filter(race != "WHITE") %>%
+      group_by(ethnicity) %>%
+      select(ethnicity) %>%
+      top_n(n = 1, wt = ethnicity)
+  })
+  
+  #valuebox for mean age of male users
+  output$grouped_topethnicity <- renderInfoBox(
+    infoBox("Top Ethnicity:", topethnicity(), color = "green", icon = icon("user-circle"))
+  )
+  
+  #mean age of male reactive
+  groupmeanage.male <- reactive({
+    groupedselectedcond() %>%
+      filter(gender == "MALE") -> maledf
+    round(mean(maledf[["age"]]), 0)
+  })
+  
+  #valuebox for mean age of male users
+  output$group_male.age <- renderInfoBox(
+    infoBox("Male Average Age:", groupmeanage.male(), color = "green", icon = icon("male"))
+  )
+  #mean age of female reactive
+  groupmeanage.female <- reactive({
+    groupedselectedcond() %>%
+      filter(gender == "FEMALE") -> femaledf
+    round(mean(femaledf[["age"]]), 0)
+  })
+  
+  #infobox for female mean age
+  output$group_female.age <- renderInfoBox(
+    infoBox("Female Average Age:", groupmeanage.female(), color = "green", icon = icon("female"))
+  )
+  
+  
   ##################################################################
   # Tab4 - United States Plot Tab
   ##################################################################
@@ -427,7 +519,15 @@ server <- function(input, output, session){
                      group = group)) -> uscondmap
   uscondmap +
     ggtitle("DNAsimple Donor Condition Demographics") +
-    coord_fixed(1.5)
+    guides(fill=guide_legend(title="Users with Condition")) +
+    coord_fixed(1.5) +
+    theme(axis.title.x=element_blank(),
+          axis.text.x=element_blank(),
+          axis.ticks.x=element_blank(),
+          axis.ticks.y = element_blank(),
+          axis.text.y = element_blank(),
+          axis.title.y = element_blank())  
+    
   })
   
   output$mapratio <- renderPlot({
@@ -436,7 +536,7 @@ server <- function(input, output, session){
       mutate(condition.ratio =
                has.condition / (noncond + has.condition)) -> ratiomap
     
-      ggplot(ratiomap) +
+    ggplot(ratiomap) +
       geom_polygon(aes(x = long,
                        y = lat,
                        fill = condition.ratio,
@@ -444,7 +544,13 @@ server <- function(input, output, session){
       scale_fill_gradient(name = "Condition Ratio",
                           low = "yellow", high = "red") +
       coord_fixed(1.5) +
-      ggtitle("DNAsimple User with Condition Ratio")
+      ggtitle("DNAsimple Users with Condition Ratio") +
+      theme(axis.title.x=element_blank(),
+            axis.text.x=element_blank(),
+            axis.ticks.x=element_blank(),
+            axis.ticks.y = element_blank(),
+            axis.text.y = element_blank(),
+            axis.title.y = element_blank())  
   })
   
   
