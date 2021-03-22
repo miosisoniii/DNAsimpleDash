@@ -2,3 +2,5 @@
 .Rhistory
 .RData
 .Ruserdata
+
+./data/user_with_conditions.csv
