@@ -445,7 +445,9 @@ server <- function(input, output, session){
       filter(race != "WHITE") %>%
       group_by(ethnicity) %>%
       select(ethnicity) %>%
-      top_n(n = 1, wt = ethnicity)
+      # top_n(n = 1, wt = ethnicity)
+      ## ERROR 01 - SOLVED
+      head(n = 1)
   })
   
   #valuebox for mean age of male users
