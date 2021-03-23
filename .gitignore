@@ -3,4 +3,8 @@
 .RData
 .Ruserdata
 
+# ignore all files present in the "data folder"
 data/
+
+# ignore .csv files for upload
+*.csv
